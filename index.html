@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ammu's Photos</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    min-height: 100vh;
+    overflow: hidden;
+    background: #0b5d2a;
+    color: #fff;
+  }
+
+  .screen {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.8s ease;
+  }
+  .hidden { display: none !important; }
+  .fade-out { opacity: 0; pointer-events: none; }
+
+  /* ---------- PASSWORD SCREEN ---------- */
+  #login {
+    background: linear-gradient(135deg, #ffb6c1, #ff8fab);
+    flex-direction: column;
+    gap: 18px;
+  }
+  #login h1 { font-size: 2rem; color: #fff; text-shadow: 0 2px 8px rgba(0,0,0,0.2); }
+  #login input {
+    padding: 14px 20px;
+    font-size: 1.1rem;
+    border: none;
+    border-radius: 30px;
+    outline: none;
+    text-align: center;
+    width: 260px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+  }
+  #login button {
+    padding: 12px 36px;
+    font-size: 1rem;
+    border: none;
+    border-radius: 30px;
+    background: #fff;
+    color: #ff5c8a;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+    transition: transform 0.2s;
+  }
+  #login button:hover { transform: scale(1.05); }
+  #error { color: #fff; font-weight: bold; min-height: 20px; }
+  .shake { animation: shake 0.4s; }
+  @keyframes shake {
+    0%,100% { transform: translateX(0); }
+    25% { transform: translateX(-10px); }
+    75% { transform: translateX(10px); }
+  }
+
+  /* ---------- FLOWER OPENING ---------- */
+  #flower {
+    background: #fff8e7;
+    overflow: hidden;
+  }
+  .flower-wrap {
+    position: relative;
+    width: 300px;
+    height: 300px;
+  }
+  .petal {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 90px;
+    height: 130px;
+    margin-left: -45px;
+    margin-top: -65px;
+    background: linear-gradient(to top, #ff7eb3, #ffc2d9);
+    border-radius: 50% 50% 50% 50% / 65% 65% 35% 35%;
+    transform-origin: center;
+    transform: rotate(var(--r)) translateY(-70px) scale(0);
+    animation: bloom 0.8s ease-out forwards;
+    animation-delay: var(--d);
+    box-shadow: inset 0 0 12px rgba(255,255,255,0.5);
+  }
+  @keyframes bloom {
+    to { transform: rotate(var(--r)) translateY(-70px) scale(1); }
+  }
+  .center {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 60px;
+    height: 60px;
+    margin: -30px 0 0 -30px;
+    border-radius: 50%;
+    background: radial-gradient(circle, #ffe066, #ffb300);
+    transform: scale(0);
+    animation: pop 0.6s ease-out 0.9s forwards;
+    box-shadow: 0 0 20px rgba(255,200,0,0.6);
+  }
+  @keyframes pop {
+    to { transform: scale(1); }
+  }
+  .flower-text {
+    position: absolute;
+    bottom: 40px;
+    width: 100%;
+    text-align: center;
+    font-size: 1.4rem;
+    color: #ff5c8a;
+    opacity: 0;
+    animation: fadeIn 0.8s ease 1.8s forwards;
+  }
+  @keyframes fadeIn { to { opacity: 1; } }
+
+  /* ---------- GALLERY (GREEN BACKGROUND) ---------- */
+  #gallery {
+    background: radial-gradient(circle at 50% 40%, #3ddc84, #1e8f4e 45%, #0b5d2a 100%);
+    background-size: 200% 200%;
+    animation: bgShift 10s ease infinite;
+    flex-direction: column;
+  }
+  @keyframes bgShift {
+    0%   { background-position: 0% 50%; }
+    50%  { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+
+  .slides {
+    position: relative;
+    width: 90vw;
+    max-width: 700px;
+    height: 80vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .slide {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    opacity: 0;
+    transform: scale(0.85) translateY(30px);
+    transition: opacity 0.7s ease, transform 0.7s ease;
+    pointer-events: none;
+  }
+  .slide.active {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+    pointer-events: auto;
+  }
+  .slide img {
+    max-width: 100%;
+    max-height: 65vh;
+    object-fit: contain;
+    border-radius: 16px;
+    border: 6px solid #fff;
+    box-shadow: 0 10px 35px rgba(0,0,0,0.35);
+    background: #fff;
+  }
+  .caption {
+    margin-top: 20px;
+    font-size: 1.8rem;
+    font-weight: bold;
+    color: #fff;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    text-align: center;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: opacity 0.6s ease 0.3s, transform 0.6s ease 0.3s;
+  }
+  .slide.active .caption { opacity: 1; transform: translateY(0); }
+
+  .controls {
+    position: fixed;
+    bottom: 20px;
+    display: flex;
+    gap: 14px;
+  }
+  .controls button {
+    padding: 10px 22px;
+    border: none;
+    border-radius: 25px;
+    background: rgba(255,255,255,0.9);
+    color: #0b5d2a;
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: transform 0.2s;
+  }
+  .controls button:hover { transform: scale(1.07); }
+
+  .counter {
+    position: fixed;
+    top: 18px;
+    right: 22px;
+    color: rgba(255,255,255,0.85);
+    font-size: 0.95rem;
+  }
+</style>
+</head>
+<body>
+
+<div id="login" class="screen">
+  <h1>💕 Enter the secret word 💕</h1>
+  <input type="password" id="password" placeholder="Password">
+  <button id="enterBtn">Open</button>
+  <div id="error"></div>
+</div>
+
+<div id="flower" class="screen hidden">
+  <div class="flower-wrap" id="flowerWrap">
+    <div class="center"></div>
+  </div>
+  <div class="flower-text">Ammu's Photos 🌸</div>
+</div>
+
+<div id="gallery" class="screen hidden">
+  <div class="counter" id="counter"></div>
+  <div class="slides" id="slides"></div>
+  <div class="controls">
+    <button id="prevBtn">‹ Prev</button>
+    <button id="nextBtn">Next ›</button>
+    <button id="replayBtn" class="hidden">↻ Replay</button>
+  </div>
+</div>
+
+<script>
+  const PASSWORD = "podapatti";
+
+  const photos = [
+    { src: "photo1.jpg", caption: "cute ammu" },
+    { src: "photo2.jpg", caption: "angry ammu" },
+    { src: "photo3.jpg", caption: "vali ammu" },
+    { src: "photo4.jpg", caption: "small ammu" },
+    { src: "photo5.jpg", caption: "happiest ammu" },
+    { src: "photo6.jpg", caption: "penakam ammu" }
+  ];
+
+  const SLIDE_TIME = 3500;
+
+  const loginScreen = document.getElementById("login");
+  const flowerScreen = document.getElementById("flower");
+  const galleryScreen = document.getElementById("gallery");
+  const passwordInput = document.getElementById("password");
+  const errorBox = document.getElementById("error");
+  const slidesBox = document.getElementById("slides");
+  const counter = document.getElementById("counter");
+  const prevBtn = document.getElementById("prevBtn");
+  const nextBtn = document.getElementById("nextBtn");
+  const replayBtn = document.getElementById("replayBtn");
+
+  let current = 0;
+  let timer = null;
+
+  function checkPassword() {
+    if (passwordInput.value.trim().toLowerCase() === PASSWORD) {
+      errorBox.textContent = "";
+      loginScreen.classList.add("fade-out");
+      setTimeout(() => {
+        loginScreen.classList.add("hidden");
+        startFlower();
+      }, 800);
+    } else {
+      errorBox.textContent = "Wrong password, try again 💔";
+      passwordInput.value = "";
+      loginScreen.querySelector("input").classList.add("shake");
+      setTimeout(() => loginScreen.querySelector("input").classList.remove("shake"), 400);
+    }
+  }
+
+  document.getElementById("enterBtn").addEventListener("click", checkPassword);
+  passwordInput.addEventListener("keydown", e => {
+    if (e.key === "Enter") checkPassword();
+  });
+
+  function startFlower() {
+    flowerScreen.classList.remove("hidden");
+    const wrap = document.getElementById("flowerWrap");
+    const petalCount = 8;
+    for (let i = 0; i < petalCount; i++) {
+      const petal = document.createElement("div");
+      petal.className = "petal";
+      petal.style.setProperty("--r", (i * 360 / petalCount) + "deg");
+      petal.style.setProperty("--d", (i * 0.1) + "s");
+      wrap.appendChild(petal);
+    }
+
+    setTimeout(() => {
+      flowerScreen.classList.add("fade-out");
+      setTimeout(() => {
+        flowerScreen.classList.add("hidden");
+        startGallery();
+      }, 800);
+    }, 3500);
+  }
+
+  function buildSlides() {
+    slidesBox.innerHTML = "";
+    photos.forEach(p => {
+      const slide = document.createElement("div");
+      slide.className = "slide";
+      slide.innerHTML = `
+        <img src="${p.src}" alt="${p.caption}">
+        <div class="caption">${p.caption}</div>
+      `;
+      slidesBox.appendChild(slide);
+    });
+  }
+
+  function showSlide(index) {
+    const slides = document.querySelectorAll(".slide");
+    slides.forEach(s => s.classList.remove("active"));
+    slides[index].classList.add("active");
+    counter.textContent = (index + 1) + " / " + photos.length;
+  }
+
+  function nextSlide() {
+    if (current < photos.length - 1) {
+      current++;
+      showSlide(current);
+    } else {
+      stopAuto();
+      replayBtn.classList.remove("hidden");
+    }
+  }
+
+  function prevSlide() {
+    if (current > 0) {
+      current--;
+      showSlide(current);
+    }
+  }
+
+  function startAuto() {
+    stopAuto();
+    timer = setInterval(nextSlide, SLIDE_TIME);
+  }
+
+  function stopAuto() {
+    clearInterval(timer);
+    timer = null;
+  }
+
+  function startGallery() {
+    galleryScreen.classList.remove("hidden");
+    buildSlides();
+    current = 0;
+    replayBtn.classList.add("hidden");
+    showSlide(current);
+    startAuto();
+  }
+
+  nextBtn.addEventListener("click", () => {
+    nextSlide();
+    if (timer) startAuto();
+  });
+
+  prevBtn.addEventListener("click", () => {
+    prevSlide();
+    if (timer) startAuto();
+  });
+
+  replayBtn.addEventListener("click", () => {
+    current = 0;
+    replayBtn.classList.add("hidden");
+    showSlide(current);
+    startAuto();
+  });
+</script>
+
+</body>
+</html>
