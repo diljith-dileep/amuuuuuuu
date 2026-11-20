@@ -206,6 +206,48 @@
     color: rgba(255,255,255,0.85);
     font-size: 0.95rem;
   }
+
+  .end-message {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 20px;
+  }
+  .end-text {
+    font-size: clamp(2.2rem, 8vw, 4rem);
+    font-weight: bold;
+    color: #fff;
+    text-shadow: 0 4px 20px rgba(0,0,0,0.4);
+    opacity: 0;
+  }
+  .end-text.anim-thank {
+    animation: thankPop 0.9s ease forwards, floatY 2.2s ease-in-out infinite 0.9s;
+  }
+  .end-text.anim-nari {
+    animation: nariBurst 0.8s cubic-bezier(.2,1.4,.4,1) forwards, nariPulse 0.6s ease-in-out infinite 0.8s;
+    color: #fff7a8;
+  }
+  @keyframes thankPop {
+    0% { opacity: 0; transform: scale(0.4) translateY(30px); }
+    70% { opacity: 1; transform: scale(1.08) translateY(-6px); }
+    100% { opacity: 1; transform: scale(1) translateY(0); }
+  }
+  @keyframes floatY {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-12px); }
+  }
+  @keyframes nariBurst {
+    0% { opacity: 0; transform: scale(0.2) rotate(-10deg); filter: blur(6px); }
+    60% { opacity: 1; transform: scale(1.15) rotate(3deg); filter: blur(0); }
+    100% { opacity: 1; transform: scale(1) rotate(0); }
+  }
+  @keyframes nariPulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.06); }
+  }
 </style>
 </head>
 <body>
@@ -227,6 +269,9 @@
 <div id="gallery" class="screen hidden">
   <div class="counter" id="counter"></div>
   <div class="slides" id="slides"></div>
+  <div id="endMessage" class="end-message hidden">
+    <div id="endText" class="end-text"></div>
+  </div>
   <div class="controls">
     <button id="prevBtn">‹ Prev</button>
     <button id="nextBtn">Next ›</button>
@@ -238,13 +283,14 @@
   const PASSWORD = "podapatti";
 
   const photos = [
-    { src: "photos/WhatsApp%20Image%202026-11-20%20at%202.21.12%20PM.jpeg", caption: "cute ammu" },
-    { src: "photos/WhatsApp%20Image%202026-11-20%20at%202.21.29%20PM%20%281%29.jpeg", caption: "angry ammu" },
-    { src: "photos/WhatsApp%20Image%202026-11-20%20at%202.21.29%20PM.jpeg", caption: "vali ammu" },
-    { src: "photos/WhatsApp%20Image%202026-11-20%20at%202.21.30%20PM%20%281%29.jpeg", caption: "small ammu" },
-    { src: "photos/WhatsApp%20Image%202026-11-20%20at%202.21.30%20PM.jpeg", caption: "happiest ammu" },
-    { src: "photos/WhatsApp%20Image%202026-11-20%20at%202.21.31%20PM.jpeg", caption: "penakam ammu" }
+    { src: "photos/WhatsApp%20Image%202026-11-20%20at%202.21.12%20PM.jpeg", caption: "happpiest ammu" },
+    { src: "photos/WhatsApp%20Image%202026-11-20%20at%202.21.29%20PM%20%281%29.jpeg", caption: "vali ammu" },
+    { src: "photos/WhatsApp%20Image%202026-11-20%20at%202.21.29%20PM.jpeg", caption: "mushaata ammu" },
+    { src: "photos/WhatsApp%20Image%202026-11-20%20at%202.21.30%20PM%20%281%29.jpeg", caption: "penakam ammu" },
+    { src: "photos/WhatsApp%20Image%202026-11-20%20at%202.21.30%20PM.jpeg", caption: "angry ammu" },
+    { src: "photos/WhatsApp%20Image%202026-11-20%20at%202.21.31%20PM.jpeg", caption: "cute ammu" }
   ];
+  const endMessages = ["thank you", "pooooodi naaari"];
 
   const SLIDE_TIME = 3500;
 
@@ -258,6 +304,8 @@
   const prevBtn = document.getElementById("prevBtn");
   const nextBtn = document.getElementById("nextBtn");
   const replayBtn = document.getElementById("replayBtn");
+  const endBox = document.getElementById("endMessage");
+  const endText = document.getElementById("endText");
 
   let current = 0;
   let timer = null;
@@ -329,7 +377,28 @@
       current++;
       showSlide(current);
     } else {
-      stopAuto();
+      startEndSequence();
+    }
+  }
+
+  function startEndSequence() {
+    stopAuto();
+    slidesBox.classList.add("hidden");
+    counter.classList.add("hidden");
+    prevBtn.classList.add("hidden");
+    nextBtn.classList.add("hidden");
+    endBox.classList.remove("hidden");
+    showEnd(0);
+  }
+
+  function showEnd(i) {
+    endText.textContent = endMessages[i];
+    endText.className = "end-text";
+    void endText.offsetWidth;
+    endText.classList.add(i === 0 ? "anim-thank" : "anim-nari");
+    if (i < endMessages.length - 1) {
+      setTimeout(() => showEnd(i + 1), 2600);
+    } else {
       replayBtn.classList.remove("hidden");
     }
   }
@@ -356,6 +425,13 @@
     buildSlides();
     current = 0;
     replayBtn.classList.add("hidden");
+    endBox.classList.add("hidden");
+    endText.className = "end-text";
+    endText.textContent = "";
+    slidesBox.classList.remove("hidden");
+    counter.classList.remove("hidden");
+    prevBtn.classList.remove("hidden");
+    nextBtn.classList.remove("hidden");
     showSlide(current);
     startAuto();
   }
@@ -373,6 +449,13 @@
   replayBtn.addEventListener("click", () => {
     current = 0;
     replayBtn.classList.add("hidden");
+    endBox.classList.add("hidden");
+    endText.className = "end-text";
+    endText.textContent = "";
+    slidesBox.classList.remove("hidden");
+    counter.classList.remove("hidden");
+    prevBtn.classList.remove("hidden");
+    nextBtn.classList.remove("hidden");
     showSlide(current);
     startAuto();
   });
